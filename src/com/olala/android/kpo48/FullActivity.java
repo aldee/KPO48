@@ -24,6 +24,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.jsoup.*;
+
 public class FullActivity extends Activity {
 	
 	ListView list;
@@ -53,7 +55,7 @@ public class FullActivity extends Activity {
 		list = (ListView) findViewById(R.id.listView1);
 		i = getIntent();
 		
-		FullActivity.httpClient = new DefaultHttpClient();
+		FullActivity.httpClient = LoginActivity.httpClient;
 		
 		dataList = new ArrayList<HashMap<String, String>>();		
 		angkatan = i.getStringExtra(TAG_ANGKATAN);
@@ -82,8 +84,6 @@ public class FullActivity extends Activity {
 			
 			JSONObject json = jParser.makeHttpRequest(url_all_data, "GET", params, httpClient);
 			
-			//Log.d("All data = ", json.toString());
-			
 			try {
 				int success = json.getInt("success");
 				if (success == 1) {
@@ -91,8 +91,6 @@ public class FullActivity extends Activity {
 					
 					for (int i = 0; i < datas.length(); i++) {
 						JSONObject c = datas.getJSONObject(i);
-						
-						//Log.d("Data" +i+ " = ", c.toString());
 						
 						String nama = c.getString(TAG_NAMA);
 						String url = c.getString(TAG_URL);

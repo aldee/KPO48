@@ -29,5 +29,6 @@
     <string name="title_activity_list">ListActivity</string>
     <string name="title_activity_full">FullActivity</string>
     <string name="title_activity_details">DetailsActivity</string>
+    <string name="title_activity_login">LoginActivity</string>
 
 </resources>
