@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
@@ -11,13 +12,26 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
@@ -25,6 +39,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.jsoup.*;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 public class FullActivity extends Activity {
 	
@@ -94,12 +111,13 @@ public class FullActivity extends Activity {
 						
 						String nama = c.getString(TAG_NAMA);
 						String url = c.getString(TAG_URL);
-						
-						
+						String ip = getIP(url);
+
 						HashMap<String, String> map = new HashMap<String, String>();
 						
 						map.put(TAG_NAMA, nama);
 						map.put(TAG_URL, url);
+						map.put("IP", ip);
 						
 						dataList.add(map);
 					}
@@ -125,7 +143,7 @@ public class FullActivity extends Activity {
 			}
 			return null;
 		}
-		
+
 		protected void onPostExecute(String file_url) {
 			pDialog.dismiss();
 			runOnUiThread(new Runnable() {
@@ -134,11 +152,13 @@ public class FullActivity extends Activity {
 				public void run() {
 					// TODO Auto-generated method stub
 					String[] from = new String[] {
-						TAG_NAMA
+						TAG_NAMA,
+						"IP"
 					};
 					
 					int[] to = new int[] {
-						R.id.textView1	
+						R.id.textView1,
+						R.id.textView2
 					};
 					ListAdapter adapter = new SimpleAdapter(FullActivity.this, dataList, R.layout.data, from, to);
 					list.setAdapter(adapter);
@@ -154,6 +174,52 @@ public class FullActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.list, menu);
 		return true;
+	}
+
+	public String getIP(String url) {
+		// TODO Auto-generated method stub
+		HttpGet httpGet = new HttpGet(url);
+		String response = null;
+		String float1 = null;
+		try {
+			response = httpClient.execute(httpGet, new BasicResponseHandler());
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		File input = new File(getApplicationContext().getFilesDir(), "data.html");
+		
+		FileOutputStream output;
+		try {
+			output = openFileOutput("data.html", Context.MODE_PRIVATE);
+			output.write(response.getBytes());
+			output.close();
+			Document doc = Jsoup.parse(input, "UTF-8");
+			Elements data = doc.getElementsByClass("tabel-info");
+			
+			String tabel = data.toString();
+			
+			String re1=".*?";
+			String re2="([0-9]\\.[0-9][0-9])";
+			Pattern p = Pattern.compile(re1+re2,Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+		    Matcher m = p.matcher(tabel);
+		    if (m.find())
+		    {
+		        float1=m.group(1);
+		    }
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return float1.toString();
 	}
 
 }
